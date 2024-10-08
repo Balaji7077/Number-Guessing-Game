@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game with Leaderboard and Timer</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image:
+                url("images/WhatsApp\ Image\ 2024-10-08\ at\ 19.27.01_91784405.jpg");
+            background-size: cover; /* Ensures the image covers the entire viewport */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+        input[type="number"], input[type="text"], select, button {
+            padding: 12px;
+            width: 100%;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            outline: none;
+        }
+        button {
+            background-color: #6c63ff;
+            color: white;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #5a54e3;
+        }
+        .result {
+            font-size: 18px;
+            color: #333;
+            margin-top: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        #chances {
+            font-weight: bold;
+        }
+        #leaderboard {
+            margin-top: 30px;
+            font-size: 16px;
+        }
+        #timer {
+            font-weight: bold;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Number Guessing Game</h1>
+        <p>Enter your name:</p>
+        <input type="text" id="playerName" placeholder="Enter Your Name" required>
+        
+        <p>Select difficulty level:</p>
+        <select id="difficulty">
+            <option value="easy">Easy (10 chances)</option>
+            <option value="medium">Medium (7 chances)</option>
+            <option value="hard">Hard (5 chances)</option>
+        </select>
+        <p>Enter the lower and upper range to guess a number:</p>
+        <input type="number" id="lower" placeholder="Enter Lower Number" min="0">
+        <input type="number" id="upper" placeholder="Enter Upper Number" min="1">
+        <button onclick="startGame()">Start Game</button>
+
+        <div id="game" class="hidden">
+            <p>You have <span id="chances"></span> chances to guess the number!</p>
+            <p>Time left: <span id="timer">30</span> seconds</p>
+            <input type="number" id="guess" placeholder="Enter your guess">
+            <button onclick="checkGuess()">Submit Guess</button>
+            <div class="result" id="result"></div>
+            <button onclick="resetGame()">Reset Game</button>
+        </div>
+
+        <div id="leaderboard">
+            <h3>Leaderboard</h3>
+            <ul id="leaderboard-list"></ul>
+        </div>
+    </div>
+    
+
+    <script>
+        let randomNumber, totalChances, guessCount = 0, score = 0, countdown, timeLeft = 30;
+        let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+
+        function startGame() {
+            const lower = parseInt(document.getElementById('lower').value);
+            const upper = parseInt(document.getElementById('upper').value);
+            const difficulty = document.getElementById('difficulty').value;
+            const playerName = document.getElementById('playerName').value.trim();
+
+            if (!playerName) {
+                alert("Please enter your name!");
+                return;
+            }
+
+            if (!isNaN(lower) && !isNaN(upper) && lower < upper) {
+                randomNumber = Math.floor(Math.random() * (upper - lower + 1)) + lower;
+
+                if (difficulty === "easy") {
+                    totalChances = 10;
+                    timeLeft = 60;
+                } else if (difficulty === "medium") {
+                    totalChances = 7;
+                    timeLeft = 45;
+                } else {
+                    totalChances = 5;
+                    timeLeft = 30;
+                }
+
+                document.getElementById('chances').innerText = totalChances;
+                document.getElementById('timer').innerText = timeLeft;
+                document.getElementById('game').classList.remove('hidden');
+                guessCount = 0;
+                document.getElementById('result').innerHTML = '';
+
+                startTimer(); // Start the countdown timer
+            } else {
+                alert("Please enter a valid range!");
+            }
+        }
+
+        function startTimer() {
+            countdown = setInterval(function() {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    document.getElementById('result').innerHTML = `Time's up! The number was ${randomNumber}.`;
+                    document.getElementById('game').classList.add('hidden');
+                }
+            }, 1000);
+        }
+
+        function checkGuess() {
+            const guess = parseInt(document.getElementById('guess').value);
+            const playerName = document.getElementById('playerName').value.trim();
+
+            if (isNaN(guess)) {
+                alert("Please enter a valid number!");
+                return;
+            }
+
+            guessCount += 1;
+
+            if (guess === randomNumber) {
+                document.getElementById('result').innerHTML = `Congratulations, ${playerName}! You guessed the number in ${guessCount} tries.`;
+                score += totalChances - guessCount + 1;
+                document.getElementById('result').innerHTML += `<br>Your score is: ${score}`;
+                clearInterval(countdown); // Stop the timer when the game is won
+                updateLeaderboard(playerName, score); // Update leaderboard
+            } else if (guess > randomNumber) {
+                document.getElementById('result').innerHTML = "Your guess is too high!";
+            } else {
+                document.getElementById('result').innerHTML = "Your guess is too low!";
+            }
+
+            if (guessCount >= totalChances) {
+                if (guess !== randomNumber) {
+                    document.getElementById('result').innerHTML += `<br>You've used all your chances! The number was ${randomNumber}.`;
+                }
+                document.getElementById('game').classList.add('hidden');
+                clearInterval(countdown); // Stop the timer
+            }
+        }
+
+        function updateLeaderboard(playerName, score) {
+            leaderboard.push({ name: playerName, score: score });
+            leaderboard.sort((a, b) => b.score - a.score); // Sort in descending order by score
+            leaderboard = leaderboard.slice(0, 5); // Keep top 5 scores
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+            displayLeaderboard();
+        }
+
+        function displayLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboard-list');
+            leaderboardList.innerHTML = '';
+            leaderboard.forEach((entry, index) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `#${index + 1}: ${entry.name} - ${entry.score}`;
+                leaderboardList.appendChild(listItem);
+            });
+        }
+
+        function resetGame() {
+            document.getElementById('lower').value = '';
+            document.getElementById('upper').value = '';
+            document.getElementById('guess').value = '';
+            document.getElementById('playerName').value = '';
+            document.getElementById('game').classList.add('hidden');
+            document.getElementById('result').innerHTML = '';
+            clearInterval(countdown); // Reset the timer
+            timeLeft = 60; // Reset time
+        }
+
+        // Initial leaderboard display
+        displayLeaderboard();
+    </script>
+</body>
+</html>
