@@ -5,6 +5,10 @@ In this project, we implement a Number Guessing Game where the system selects a 
 
   https://balaji7077.github.io/Number-Guessing-Game/
 
+
+![Screenshot](https://github.com/user-attachments/assets/c9c9b0a7-d559-4055-9d71-f77bacb1b1bd)
+
+
 # Problem Analysis
 
 ## Game Explanation
