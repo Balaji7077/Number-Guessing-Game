@@ -1,6 +1,10 @@
 # Number Guessing Game
 In this project, we implement a Number Guessing Game where the system selects a random integer within a user-defined range, and the user has to guess the number in the minimum number of attempts. The goal is to minimize the number of guesses by intelligently narrowing down the guessing range.
 
+# Click Here For Demo
+
+  https://balaji7077.github.io/Number-Guessing-Game/
+
 # Problem Analysis
 
 ## Game Explanation
